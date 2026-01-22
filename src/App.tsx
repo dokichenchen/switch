@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-// 修正引用路徑：因為 App.tsx 與 components 資料夾現在都在 src 內
+// 修正點：確保路徑指向 src/components 內的元件
 import StepIndicator from './components/StepIndicator';
 import Step1Upload from './components/Step1Upload';
 import Step2Clean from './components/Step2Clean';
 import Step3Merge from './components/Step3Merge';
-// 確保 types 檔案路徑正確，若 types.ts 在 src 根目錄則使用 './types'
+// 修正點：確保指向 src/types.ts
 import { AppStep, ExtractedData, CleanedSlideData } from './types';
 
 const App: React.FC = () => {
@@ -16,7 +16,7 @@ const App: React.FC = () => {
   // 儲存第二步清理後的幻燈片資料
   const [cleanedSlides, setCleanedSlides] = useState<CleanedSlideData[]>([]);
 
-  // 最終檔案名稱
+  // 共享的檔案名稱
   const [finalFileName, setFinalFileName] = useState<string>("Presentation");
 
   const handleStep1Complete = (data: { fileName: string; extractedText: any; pageCount: number; previewImage: string | null }) => {
@@ -27,7 +27,7 @@ const App: React.FC = () => {
         previewImage: data.previewImage
     });
     setFinalFileName(data.fileName);
-    // 自動進入下一步，優化使用者體驗
+    // 自動進入下一步
     setTimeout(() => setCurrentStep(AppStep.AI_CLEAN), 1500);
   };
 
@@ -63,7 +63,7 @@ const App: React.FC = () => {
       {/* 主要內容 */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         
-        {/* 標題區域 */}
+        {/* 標題 */}
         <div className="text-center mb-12">
             <h2 className="text-4xl font-extrabold text-gray-900 mb-4">
                 讓您的 PDF <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-500">復活並可編輯</span>
