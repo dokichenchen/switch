@@ -1,0 +1,5 @@
+{
+  "name": "PDF to Editable PPTX Converter",
+  "description": "A workflow tool to convert PDF slides into fully editable PPTX files by separating text and background using AI.",
+  "requestFramePermissions": []
+}
