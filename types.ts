@@ -1,3 +1,4 @@
+
 export enum AppStep {
   UPLOAD_SEPARATE = 1,
   AI_CLEAN = 2,
@@ -14,8 +15,8 @@ export interface ProcessingStatus {
 export interface ExtractedData {
   fileName: string;
   pageCount: number;
-  extractedText: any; // The raw JSON from Gemini Step 1
-  previewImage: string | null;
+  extractedText: any[]; // Array of JSON results per page
+  previewImages: string[]; // Array of Base64 strings per page
 }
 
 export interface CleanedSlideData {

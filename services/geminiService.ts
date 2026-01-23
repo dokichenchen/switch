@@ -2,7 +2,6 @@ import { GoogleGenAI, Type } from "@google/genai";
 
 /**
  * Helper to initialize Gemini Client. 
- * Must create a new instance right before use to ensure the latest API key is used.
  */
 const getClient = () => {
     return new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -10,9 +9,12 @@ const getClient = () => {
 
 /**
  * Step 1: Layout Recovery Analysis
- * Extracts text with high precision coordinates.
  */
 export const analyzeSlideStructure = async (base64Image: string, mimeType: string = 'image/jpeg') => {
+    if (!base64Image || base64Image.length < 100) {
+        throw new Error("無效的影像數據：影像內容過短或格式錯誤。");
+    }
+    
     try {
         const ai = getClient();
         
@@ -27,12 +29,17 @@ export const analyzeSlideStructure = async (base64Image: string, mimeType: strin
                         }
                     },
                     {
-                        text: `You are a professional DTP Expert. Analyze this 16:9 slide.
-                        Extract ALL text including:
-                        1. Main titles and headers.
-                        2. Section labels like "方案 A" and "方案 B".
-                        3. Numbers and labels inside charts/tables.
-                        Return exact [ymin, xmin, ymax, xmax] in 0-1000 scale, font details, and colors.`
+                        text: `Analyze this 16:9 presentation slide as a professional DTP Expert.
+                        Your task is to identify and extract EVERY SINGLE piece of text for conversion to editable PowerPoint.
+                        
+                        INCLUDE:
+                        1. Main titles, subtitles, and headings.
+                        2. All body text, bullet points, and paragraphs.
+                        3. Text inside tables (every cell), charts, or organizational diagrams.
+                        4. Captions, small labels, names, and identifiers next to icons/avatars.
+                        5. Content inside information boxes, panels, speech bubbles, and banners.
+                        
+                        RETURN: A JSON object with an array of 'textBlocks'. Each block must have 'text' content, 'box_2d' [ymin, xmin, ymax, xmax] (0-1000 scale), 'fontSize', 'fontColor' (Hex), 'alignment', and 'isBold'.`
                     }
                 ]
             },
@@ -79,10 +86,13 @@ export const analyzeSlideStructure = async (base64Image: string, mimeType: strin
 };
 
 /**
- * Step 2: High-Fidelity Background Reconstruction
- * Specifically targets headers and data bars for clean removal while keeping structures.
+ * Step 2: High-Fidelity Background Reconstruction (ANTI-HALLUCINATION EDITION)
  */
 export const generateCleanSlideBackground = async (base64Image: string, mimeType: string = 'image/jpeg') => {
+    if (!base64Image || base64Image.length < 100) {
+        throw new Error("無效的影像數據：無法處理。");
+    }
+
     try {
         const ai = getClient();
         
@@ -97,15 +107,18 @@ export const generateCleanSlideBackground = async (base64Image: string, mimeType
                         }
                     },
                     {
-                        text: `You are a World-Class Graphic Reconstruction AI. Your goal is to create a 100% PERFECT text-free PPT template.
-
-STRICT INSTRUCTIONS FOR THE ATTACHED INFOGRAPHIC:
-1. TOP BANNERS & HEADERS: Identify colored bars at the top (like "方案 A" and "方案 B"). COMPLETELY REMOVE the white text on these bars. Replace with the EXACT solid color or gradient of the bar itself. There should be NO blurry traces left.
-2. PROGRESS BARS & CHARTS: Look for progress bars (gradient bars in containers). REMOVE the text/numbers inside or next to them, but DO NOT REMOVE THE BAR ITSELF. Keep the colored bar's fill and its container shape.
-3. TABLE DATA: Remove all text inside the table grid, but keep every single line of the grid structure.
-4. NO HALLUCINATION: Do not add new shapes. Do not turn bars into circles. Do not turn icons into blobs.
-5. ICON PROTECTION: Preserve all illustrations (e.g., icons of stores, people, clouds, money).
-6. RESULT: The final image must be a ready-to-use background template where only the layout and icons remain.`
+                        text: `You are an expert AI specialized in transforming content-filled slides into BLANK TEMPLATES. 
+                        
+                        MANDATORY RULES TO PREVENT HALLUCINATIONS:
+                        1. **BACKGROUND COLOR FIDELITY**: You MUST strictly preserve the ORIGINAL background color of the input image. If the background is white/light gray (like a table slide), keep it white. DO NOT change a white background to blue, even if other slides are blue. Each slide must be processed independently based on its own source colors.
+                        2. **ZERO-TOLERANCE for TEXT**: Erase ALL characters (Chinese/Kanji, English, Numbers). This includes text in titles, footers, charts, and diagrams.
+                        3. **TABLE RECONSTRUCTION**: Keep all grid lines and cell borders. BUT, erase all content inside every cell. The cells must be completely blank (matching the cell's background color).
+                        4. **INFO-BOXES & PANELS**: Remove text from all panels and boxes. Keep the shapes and borders. 
+                        5. **DIAGRAM LABELS**: Remove all labels like "1.", "2.", "3." and descriptions near icons.
+                        
+                        PRESERVATION: Keep graphic icons, human avatars, arrows, and complex illustrations.
+                        
+                        QUALITY: Smooth in-painting only. No blurry traces, no ghosting, and NO color leakage from other themes.`
                     }
                 ]
             },
